@@ -1,0 +1,4 @@
+interface:
+  display_name: "Azure SQL Edge Migrations"
+  short_description: "Create safe Azure SQL Edge migration scripts for MovieManager."
+  default_prompt: "Create a safe Azure SQL Edge migration for MovieManager, including rollback and validation queries."
