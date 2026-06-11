@@ -1,4 +1,5 @@
 using Application.Interfaces;
+using Domain.Entities;
 using Infrastructure.Persistence;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -9,9 +10,9 @@ public static class DependencyInjection
     // ReSharper disable once UnusedMethodReturnValue.Global
     public static IServiceCollection AddInfrastructure(this IServiceCollection services)
     {
-        services.AddSingleton<IMovieRepository, MovieMemoryRepository>();
-        services.AddSingleton<IActorRepository, ActorMemoryRepository>();
-        services.AddSingleton<ICategoryRepository, CategoryMemoryRepository>();
+        services.AddSingleton<IRepository<Movie>, MovieMemoryRepository>();
+        services.AddSingleton<IRepository<Actor>, ActorMemoryRepository>();
+        services.AddSingleton<IRepository<Category>, CategoryMemoryRepository>();
 
         return services;
     }

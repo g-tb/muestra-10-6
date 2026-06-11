@@ -3,7 +3,7 @@ using Domain.Entities;
 
 namespace Infrastructure.Persistence;
 
-internal class ActorMemoryRepository : IActorRepository
+internal class ActorMemoryRepository : IRepository<Actor>
 {
     private readonly List<Actor> _actors = new();
 

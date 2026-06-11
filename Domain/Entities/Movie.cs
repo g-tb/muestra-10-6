@@ -4,7 +4,7 @@ using Domain.Exceptions;
 
 namespace Domain.Entities;
 
-public class Movie
+public class Movie : IEntity
 {
     public int Id { get; set; }
 

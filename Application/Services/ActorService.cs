@@ -4,7 +4,7 @@ using Domain.Entities;
 
 namespace Application.Services;
 
-internal class ActorService(IActorRepository actorRepository) : IActorService
+internal class ActorService(IRepository<Actor> actorRepository) : IActorService
 {
     public ActorDTO AddMovie(Actor movie)
     {

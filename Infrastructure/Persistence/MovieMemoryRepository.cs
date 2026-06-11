@@ -3,7 +3,7 @@ using Domain.Entities;
 
 namespace Infrastructure.Persistence;
 
-internal class MovieMemoryRepository : IMovieRepository
+internal class MovieMemoryRepository : IRepository<Movie>
 {
     private readonly List<Movie> _movies = new();
 

@@ -5,7 +5,7 @@ using Domain.Entities;
 
 namespace Application.Services;
 
-internal class MovieService(IMovieRepository moviesRepository) : IMovieService
+internal class MovieService(IRepository<Movie> moviesRepository) : IMovieService
 {
     public MovieDTO AddMovie(MovieDTO movie)
     {

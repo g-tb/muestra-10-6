@@ -17,7 +17,7 @@ public class MovieServiceTest
     public void SetUp()
     {
         var services = new ServiceCollection();
-        services.AddSingleton<IMovieRepository, FakeMovieRepository>();
+        services.AddSingleton<IRepository<Movie>, FakeMovieRepository>();
         services.AddApplication();
 
         _movieService = services.BuildServiceProvider().GetRequiredService<IMovieService>();
@@ -163,7 +163,7 @@ public class MovieServiceTest
         throw new InvalidOperationException("Assert.Fail did not throw.");
     }
 
-    private class FakeMovieRepository : IMovieRepository
+    private class FakeMovieRepository : IRepository<Movie>
     {
         private readonly List<Movie> _movies = new();
 

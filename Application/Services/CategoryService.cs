@@ -1,9 +1,10 @@
 using Application.Dtos;
 using Application.Interfaces;
+using Domain.Entities;
 
 namespace Application.Services;
 
-internal class CategoryService(ICategoryRepository categoryRepository) : ICategoryService
+internal class CategoryService(IRepository<Category> categoryRepository) : ICategoryService
 {
     public CategoryDTO AddMovie(CategoryDTO category)
     {

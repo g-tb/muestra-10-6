@@ -2,7 +2,7 @@
 
 namespace Domain.Entities;
 
-public class Actor
+public class Actor : IEntity
 {
     public int Id { get; set; }
 

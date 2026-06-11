@@ -3,7 +3,7 @@ using Domain.Entities;
 
 namespace Infrastructure.Persistence;
 
-internal class CategoryMemoryRepository : ICategoryRepository
+internal class CategoryMemoryRepository : IRepository<Category>
 {
     private readonly List<Category> _categories = new();
 
