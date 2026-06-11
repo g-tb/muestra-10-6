@@ -33,3 +33,11 @@ Configure the web app with an environment variable or user secret:
 ```bash
 ConnectionStrings__MovieManagerDatabase="Server=localhost,1433;Database=MovieManager;User Id=sa;Password=<strong-password>;TrustServerCertificate=True;Encrypt=True"
 ```
+
+Optionally seed demo data on startup:
+
+```bash
+DemoData__SeedOnStartup=true
+```
+
+The demo seeder creates a small linked movie catalog and is idempotent.

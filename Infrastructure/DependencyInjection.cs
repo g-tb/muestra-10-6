@@ -17,6 +17,7 @@ public static class DependencyInjection
                                       "Connection string 'MovieManagerDatabase' is not configured.");
 
         services.AddDbContext<MovieManagerDbContext>(options => options.UseSqlServer(connectionString));
+        services.AddScoped<DemoDataSeeder>();
         services.AddScoped<IRepository<Movie>, MovieSqlRepository>();
         services.AddScoped<IRepository<Actor>, ActorSqlRepository>();
         services.AddScoped<IRepository<Category>, CategorySqlRepository>();
