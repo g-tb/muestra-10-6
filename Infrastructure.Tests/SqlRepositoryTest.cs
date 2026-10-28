@@ -240,6 +240,78 @@ public class SqlRepositoryTest
         }
     }
 
+    [TestMethod]
+    public void MovieUpdate_TrackedInstance_KeepsActors()
+    {
+        (Category category, Actor firstActor) = SeedCategoryAndActor("Action", "Keanu");
+        Actor secondActor = SeedActor("Carrie-Anne");
+
+        Movie added;
+        using (MovieManagerDbContext context = NewContext())
+        {
+            added = CreateMovieRepository(context).Add(new Movie { Title = "The Matrix", Category = category, Actors = [firstActor, secondActor] });
+        }
+
+        using (MovieManagerDbContext context = NewContext())
+        {
+            IRepository<Movie> movies = CreateMovieRepository(context);
+            Movie found = movies.Find(movie => movie.Id == added.Id)!;
+            found.Title = "The Matrix Reloaded";
+
+            Movie? updated = movies.Update(found);
+            Assert.IsNotNull(updated);
+        }
+
+        using (MovieManagerDbContext context = NewContext())
+        {
+            Movie stored = LoadMovie(context, added.Id);
+            Assert.AreEqual("The Matrix Reloaded", stored.Title);
+            Assert.AreEqual(2, stored.Actors.Count);
+            Assert.IsTrue(stored.HasActor(firstActor.Id));
+            Assert.IsTrue(stored.HasActor(secondActor.Id));
+        }
+    }
+
+    [TestMethod]
+    public void MovieUpdate_TrackedInstanceWithAddedActor_KeepsAllActorsWithoutCopies()
+    {
+        (Category category, Actor firstActor) = SeedCategoryAndActor("Action", "Keanu");
+        Actor secondActor = SeedActor("Carrie-Anne");
+        Actor thirdActor = SeedActor("Laurence");
+
+        Movie added;
+        using (MovieManagerDbContext context = NewContext())
+        {
+            added = CreateMovieRepository(context).Add(new Movie { Title = "The Matrix", Category = category, Actors = [firstActor, secondActor] });
+        }
+
+        using (MovieManagerDbContext context = NewContext())
+        {
+            IRepository<Movie> movies = CreateMovieRepository(context);
+            Movie found = movies.Find(movie => movie.Id == added.Id)!;
+            found.Actors.Add(CreateActorRepository(context).Find(actor => actor.Id == thirdActor.Id)!);
+
+            Movie? updated = movies.Update(found);
+            Assert.IsNotNull(updated);
+        }
+
+        using (MovieManagerDbContext context = NewContext())
+        {
+            Movie stored = LoadMovie(context, added.Id);
+            Assert.AreEqual(3, stored.Actors.Count);
+            Assert.IsTrue(stored.HasActor(firstActor.Id));
+            Assert.IsTrue(stored.HasActor(secondActor.Id));
+            Assert.IsTrue(stored.HasActor(thirdActor.Id));
+            Assert.AreEqual(3, context.Actors.Count());
+        }
+    }
+
+    private Actor SeedActor(string actorName)
+    {
+        using MovieManagerDbContext context = NewContext();
+        return CreateActorRepository(context).Add(new Actor { Name = actorName });
+    }
+
     private (Category Category, Actor Actor) SeedCategoryAndActor(string categoryName, string actorName)
     {
         using MovieManagerDbContext context = NewContext();
