@@ -1,5 +1,6 @@
 using Application.Interfaces;
 using Domain.Entities;
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Persistence;
@@ -14,9 +15,9 @@ internal class MovieSqlRepository(MovieManagerDbContext dbContext) : IRepository
         return oneElement;
     }
 
-    public Movie? Find(Func<Movie, bool> filter)
+    public Movie? Find(Expression<Func<Movie, bool>> filter)
     {
-        return LoadMovies().AsEnumerable().FirstOrDefault(filter);
+        return LoadMovies().FirstOrDefault(filter);
     }
 
     public IList<Movie> FindAll()

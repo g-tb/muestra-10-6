@@ -1,4 +1,5 @@
 using Application.Interfaces;
+using System.Linq.Expressions;
 using Domain.Entities;
 
 namespace Infrastructure.Persistence;
@@ -12,9 +13,9 @@ internal class CategorySqlRepository(MovieManagerDbContext dbContext) : IReposit
         return oneElement;
     }
 
-    public Category? Find(Func<Category, bool> filter)
+    public Category? Find(Expression<Func<Category, bool>> filter)
     {
-        return dbContext.Categories.AsEnumerable().FirstOrDefault(filter);
+        return dbContext.Categories.FirstOrDefault(filter);
     }
 
     public IList<Category> FindAll()
