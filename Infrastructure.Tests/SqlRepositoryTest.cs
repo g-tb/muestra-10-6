@@ -261,12 +261,12 @@ public class SqlRepositoryTest
 
     private static IRepository<Actor> CreateActorRepository(MovieManagerDbContext context)
     {
-        return new ActorSqlRepository(context);
+        return new SqlRepository<Actor>(context);
     }
 
     private static IRepository<Category> CreateCategoryRepository(MovieManagerDbContext context)
     {
-        return new CategorySqlRepository(context);
+        return new SqlRepository<Category>(context);
     }
 
     private static IRepository<Movie> CreateMovieRepository(MovieManagerDbContext context)
