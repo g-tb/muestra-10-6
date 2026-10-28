@@ -3,6 +3,7 @@ using Application.Exceptions;
 using Application.Interfaces;
 using Application.Services;
 using Domain.Entities;
+using System.Linq.Expressions;
 using Domain.Exceptions;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -176,9 +177,9 @@ public class MovieServiceTest
             return oneElement;
         }
 
-        public Movie? Find(Func<Movie, bool> filter)
+        public Movie? Find(Expression<Func<Movie, bool>> filter)
         {
-            return _movies.Where(filter).FirstOrDefault();
+            return _movies.Where(filter.Compile()).FirstOrDefault();
         }
 
         public IList<Movie> FindAll()

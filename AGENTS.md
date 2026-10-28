@@ -169,11 +169,19 @@ Reference documents for agents, including reusable skills and supporting
 guidance, are stored in the `.agents/` directory. Check that directory before
 duplicating agent-facing instructions or creating new skill-specific guidance.
 
-## Migration Context: Azure SQL Edge
+## Persistence: Azure SQL Edge
 
-The persistence layer is moving from memory-backed repositories to Azure SQL Edge
-in Docker. Code written during the migration should be compatible with durable,
-relational storage.
+Persistence uses EF Core against Azure SQL Edge running in Docker. Code should be
+compatible with durable, relational storage. Azure SQL Edge was retired on
+September 30, 2025; it is used here for local practice only.
+
+Local database:
+```bash
+docker compose up -d      # starts SQL Edge on localhost:1433, data in ./data (gitignored)
+docker compose down       # stops it; data is kept
+```
+The development connection string lives in `Web/appsettings.Development.json` and
+matches the `SA_PASSWORD` in `docker-compose.yml`.
 
 Guidelines:
 - Do not assume IDs are assigned before save, start at `1`, or are sequential
@@ -185,19 +193,38 @@ Guidelines:
 - Prefer async repository APIs for new SQL-bound work when practical.
 - Keep DTO/entity mapping explicit and centralized.
 
-## SQL Migration Safety
+## EF Core Migrations
 
-When adding SQL schema or data migrations:
-- Make migrations small, reviewable, and reversible where possible.
-- Separate schema changes from data backfills when that lowers risk.
-- Use explicit column types, nullability, indexes, foreign keys, and constraints.
+The schema is managed with EF Core migrations in `Infrastructure/Migrations`, generated
+from `MovieManagerDbContext.OnModelCreating`. Do not write hand-made SQL schema scripts.
+
+Creating and applying a migration (migrations project `Infrastructure`, startup
+project `Web`):
+- Rider: right-click `Infrastructure` → Entity Framework Core → Add Migration, then
+  Update Database.
+- CLI (uses the `dotnet-ef` version pinned in `dotnet-tools.json`):
+  ```bash
+  dotnet tool restore
+  dotnet ef migrations add <Name> --project Infrastructure --startup-project Web
+  dotnet ef database update --project Infrastructure --startup-project Web
+  ```
+
+Migration safety:
+- Change the model in `OnModelCreating` first, then generate the migration. Never
+  edit the model snapshot by hand.
+- Review the generated `Up` and `Down` before applying it. Watch for dropped
+  columns or tables and renames that EF generated as drop + add.
+- Keep migrations small. Put data backfills in their own migration
+  (`migrationBuilder.Sql(...)`), separate from schema changes.
+- Use explicit column types, nullability, indexes, foreign keys, and constraints in
+  the model configuration.
 - Avoid destructive changes unless there is a clear migration path and tests.
 - Seed only deterministic reference data; do not hide application behavior in seed
-  scripts.
+  data.
 - Store connection strings in configuration/user secrets/environment variables,
   not in code.
-- Validate migrations against a fresh Azure SQL Edge Docker database before
-  assuming they work.
+- Validate migrations against a fresh database (`docker compose down`, delete
+  `./data`, `docker compose up -d`, Update Database) before assuming they work.
 
 Useful validation checks after a migration:
 ```sql
@@ -251,13 +278,30 @@ This project uses Gitflow.
 ### Adding a New Entity
 1. Create entity class in `Domain/Entities/`
 2. Add validation logic in property setters
-3. Add repository interface in `Application/Interfaces/`
-4. Add repository implementation in `Infrastructure/Persistence/`
-5. Create DTO in `Application/Dtos/`
-6. Create service interface and implementation in `Application/Services/`
-7. Add DTO conversion methods (`toEntity()` and `fromEntity()`)
-8. Register service and repository in the appropriate DI extension methods
-9. Add unit tests in `Application.Tests/`
+3. Map the entity in `MovieManagerDbContext` and choose a repository (see below)
+4. Create DTO in `Application/Dtos/`
+5. Create service interface and implementation in `Application/Services/`
+6. Add DTO conversion methods (`toEntity()` and `fromEntity()`)
+7. Register the service in `AddApplication` and the repository in `AddInfrastructure`
+8. Add unit tests in `Application.Tests/` and InMemory repository tests in
+   `Infrastructure.Tests/`
+
+#### Choosing a repository
+- **Plain entity** (CRUD only, no relations to resolve): do not write a class. Register
+  the closed generic base explicitly in `AddInfrastructure`:
+  `services.AddScoped<IRepository<Foo>, SqlRepository<Foo>>();`
+  Do not register an open generic.
+- **Entity with relations or extra persistence rules**: write a subclass of
+  `SqlRepository<T>` in `Infrastructure/Persistence/` and override only the hooks you need:
+  - `Query()`: eager loading (`Include`, `AsSplitQuery`). Every read, `Update` and `Delete` uses it.
+  - `ResolveReferences(entity)`: swap detached related objects for tracked ones before `Add`.
+  - `CopyChanges(tracked, incoming)`: call `base` to copy scalar values, then rebuild
+    relations.
+  `MovieSqlRepository` is the reference example.
+- **Entity with different operations** (append-only, soft delete, custom queries): define
+  a specific repository interface in `Application/Interfaces/` that exposes only the
+  operations that make sense, and implement it in `Infrastructure/Persistence/`. Do not
+  force it into `IRepository<T>`.
 
 ### Adding a New Service Method
 1. Add method to the service interface and implementation in `Application/Services/`
