@@ -66,3 +66,6 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# Local SQL Edge data files (docker-compose bind mount)
+/data/
