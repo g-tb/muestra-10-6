@@ -251,13 +251,30 @@ This project uses Gitflow.
 ### Adding a New Entity
 1. Create entity class in `Domain/Entities/`
 2. Add validation logic in property setters
-3. Add repository interface in `Application/Interfaces/`
-4. Add repository implementation in `Infrastructure/Persistence/`
-5. Create DTO in `Application/Dtos/`
-6. Create service interface and implementation in `Application/Services/`
-7. Add DTO conversion methods (`toEntity()` and `fromEntity()`)
-8. Register service and repository in the appropriate DI extension methods
-9. Add unit tests in `Application.Tests/`
+3. Map the entity in `MovieManagerDbContext` and choose a repository (see below)
+4. Create DTO in `Application/Dtos/`
+5. Create service interface and implementation in `Application/Services/`
+6. Add DTO conversion methods (`toEntity()` and `fromEntity()`)
+7. Register the service in `AddApplication` and the repository in `AddInfrastructure`
+8. Add unit tests in `Application.Tests/` and InMemory repository tests in
+   `Infrastructure.Tests/`
+
+#### Choosing a repository
+- **Plain entity** (CRUD only, no relations to resolve): do not write a class. Register
+  the closed generic base explicitly in `AddInfrastructure`:
+  `services.AddScoped<IRepository<Foo>, SqlRepository<Foo>>();`
+  Do not register an open generic.
+- **Entity with relations or extra persistence rules**: write a subclass of
+  `SqlRepository<T>` in `Infrastructure/Persistence/` and override only the hooks you need:
+  - `Query()`: eager loading (`Include`, `AsSplitQuery`). Every read, `Update` and `Delete` uses it.
+  - `ResolveReferences(entity)`: swap detached related objects for tracked ones before `Add`.
+  - `CopyChanges(tracked, incoming)`: call `base` to copy scalar values, then rebuild
+    relations.
+  `MovieSqlRepository` is the reference example.
+- **Entity with different operations** (append-only, soft delete, custom queries): define
+  a specific repository interface in `Application/Interfaces/` that exposes only the
+  operations that make sense, and implement it in `Infrastructure/Persistence/`. Do not
+  force it into `IRepository<T>`.
 
 ### Adding a New Service Method
 1. Add method to the service interface and implementation in `Application/Services/`
